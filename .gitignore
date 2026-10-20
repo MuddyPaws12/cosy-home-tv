@@ -15,3 +15,6 @@ keystore.properties
 .idea/
 *.iml
 .vscode/
+
+# Your own TV: debloat lists, logs and scripts
+local/
