@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build Cosy Home, install it on the TV over the network and make it the Home screen.
 #   TV_HOST=192.168.1.50 ./install.sh
-# Run it again after changing cosy.properties. Undo: see README, "Going back".
+# Run it again after changing cosy.properties. Undo: see README, "Go back to the stock launcher".
 set -euo pipefail
 cd "$(dirname "$0")"
 : "${TV_HOST:?set TV_HOST to the IP address of the TV, e.g. TV_HOST=192.168.1.50 $0}"
