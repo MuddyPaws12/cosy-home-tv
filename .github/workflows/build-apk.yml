@@ -1,0 +1,61 @@
+name: Build APK
+
+# Builds the Cosy Home TV app in the cloud - no local Android SDK needed.
+# The finished APK appears under this run's "Artifacts" section when it ends.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      # Java 17 - matches the project's sourceCompatibility/targetCompatibility
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Caches the Gradle distribution and dependencies between runs
+      - name: Set up Gradle caching
+        uses: gradle/actions/setup-gradle@v4
+
+      # Optional: bake your personal settings into the APK.
+      # Copy your local cosy.properties into a repository secret named
+      # COSY_PROPERTIES (Settings > Secrets and variables > Actions).
+      # Without it, the build falls back to cosy.defaults.properties.
+      - name: Restore personal settings (optional)
+        env:
+          COSY_PROPERTIES: ${{ secrets.COSY_PROPERTIES }}
+        run: |
+          if [ -n "$COSY_PROPERTIES" ]; then
+            printf '%s\n' "$COSY_PROPERTIES" > cosy.properties
+            echo "Using personal settings from COSY_PROPERTIES secret."
+          else
+            echo "No COSY_PROPERTIES secret set - building with default settings."
+          fi
+
+      # ubuntu-latest runners ship with the Android SDK preinstalled and its
+      # licenses accepted, so AGP fetches platform 34 / build-tools 34 itself.
+      # No keystore.properties in the repo means the build.gradle release block
+      # falls back to debug signing - fine for sideloading (see SETUP.md).
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --console=plain
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosy-home-tv-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
